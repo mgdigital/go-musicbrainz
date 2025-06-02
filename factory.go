@@ -28,14 +28,14 @@ func NewClient(config Config) Client {
 
 	if config.FSCacheConfig.BaseDir != "" {
 		client = &clientCacheFS{
+			Client:  client,
 			baseDir: filepath.Join(conf.Server.DataFolder, "musicbrainz"),
-			client:  client,
 		}
 	}
 
 	if config.LRUCacheConfig.Size > 0 {
 		client = &clientCacheInMem{
-			client: client,
+			Client: client,
 			lru: expirable.NewLRU[string, any](
 				config.LRUCacheConfig.Size,
 				nil,

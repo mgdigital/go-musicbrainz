@@ -2,24 +2,25 @@ package musicbrainz
 
 import (
 	"context"
+
 	"github.com/hashicorp/golang-lru/v2/expirable"
 )
 
 type clientCacheInMem struct {
-	lru    *expirable.LRU[string, any]
-	client Client
+	Client
+	lru *expirable.LRU[string, any]
 }
 
 func (c *clientCacheInMem) Artist(ctx context.Context, id string) (Record[Artist], error) {
-	return getClientCacheInMemEntity[Artist](ctx, c.lru, c.client.Artist, "artist", id)
+	return getClientCacheInMemEntity[Artist](ctx, c.lru, c.Client.Artist, "artist", id)
 }
 
 func (c *clientCacheInMem) Release(ctx context.Context, id string) (Record[Release], error) {
-	return getClientCacheInMemEntity[Release](ctx, c.lru, c.client.Release, "release", id)
+	return getClientCacheInMemEntity[Release](ctx, c.lru, c.Client.Release, "release", id)
 }
 
 func (c *clientCacheInMem) ReleaseGroup(ctx context.Context, id string) (Record[ReleaseGroup], error) {
-	return getClientCacheInMemEntity[ReleaseGroup](ctx, c.lru, c.client.ReleaseGroup, "releasegroup", id)
+	return getClientCacheInMemEntity[ReleaseGroup](ctx, c.lru, c.Client.ReleaseGroup, "releasegroup", id)
 }
 
 func getClientCacheInMemEntity[T any](

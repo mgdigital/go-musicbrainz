@@ -51,3 +51,21 @@ func clientAPIByID[T any](ctx context.Context, requester requester, entity, id s
 		Data: data,
 	}, err
 }
+
+func (c clientAPI) SearchRelease(ctx context.Context, req SearchReleaseRequest) (SearchReleaseResult, error) {
+	var result SearchReleaseResult
+	_, err := c.requester.request(ctx, "/release", map[string]string{
+		"query": req.Query(),
+		"fmt":   "json",
+	}, &result)
+	return result, err
+}
+
+func (c clientAPI) SearchReleaseGroup(ctx context.Context, req SearchReleaseGroupRequest) (SearchReleaseGroupResult, error) {
+	var result SearchReleaseGroupResult
+	_, err := c.requester.request(ctx, "/release-group", map[string]string{
+		"query": req.Query(),
+		"fmt":   "json",
+	}, &result)
+	return result, err
+}

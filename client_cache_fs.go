@@ -11,20 +11,20 @@ import (
 )
 
 type clientCacheFS struct {
-	client  Client
+	Client
 	baseDir string
 }
 
 func (c *clientCacheFS) Release(ctx context.Context, id string) (Record[Release], error) {
-	return getClientCacheFSEntity[Release](ctx, c.baseDir, "release", id, c.client.Release)
+	return getClientCacheFSEntity[Release](ctx, c.baseDir, "release", id, c.Client.Release)
 }
 
 func (c *clientCacheFS) Artist(ctx context.Context, id string) (Record[Artist], error) {
-	return getClientCacheFSEntity[Artist](ctx, c.baseDir, "artist", id, c.client.Artist)
+	return getClientCacheFSEntity[Artist](ctx, c.baseDir, "artist", id, c.Client.Artist)
 }
 
 func (c *clientCacheFS) ReleaseGroup(ctx context.Context, id string) (Record[ReleaseGroup], error) {
-	return getClientCacheFSEntity[ReleaseGroup](ctx, c.baseDir, "releasegroup", id, c.client.ReleaseGroup)
+	return getClientCacheFSEntity[ReleaseGroup](ctx, c.baseDir, "releasegroup", id, c.Client.ReleaseGroup)
 }
 
 func getClientCacheFSEntity[T any](

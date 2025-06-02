@@ -1,8 +1,10 @@
 package musicbrainz
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -48,6 +50,7 @@ type ReleaseGroup struct {
 	PrimaryTypeID    string         `json:"primary-type-id"`
 	SecondaryTypes   []string       `json:"secondary-types"`
 	Disambiguation   string         `json:"disambiguation"`
+	Score            int            `json:"score"`
 	Tags             []Tag          `json:"tags"`
 	Releases         []Release      `json:"releases"`
 	ArtistCredit     []ArtistCredit `json:"artist-credit"`
@@ -95,6 +98,7 @@ type Media struct {
 	Format      string  `json:"format"`
 	Title       string  `json:"title"`
 	Position    int     `json:"position"`
+	DiscCount   int     `json:"disc-count"`
 	TrackCount  int     `json:"track-count"`
 	TrackOffset int     `json:"track-offset"`
 	FormatID    string  `json:"format-id"`
@@ -105,6 +109,7 @@ type Media struct {
 type Release struct {
 	ID                 string             `json:"id"`
 	Title              string             `json:"title"`
+	Status             string             `json:"status"`
 	Disambiguation     string             `json:"disambiguation"`
 	TextRepresentation TextRepresentation `json:"text-representation"`
 	Date               string             `json:"date"`
@@ -113,6 +118,9 @@ type Release struct {
 	Barcode            string             `json:"barcode"`
 	Quality            string             `json:"quality"`
 	Country            string             `json:"country"`
+	TrackCount         int                `json:"track-count"`
+	Count              int                `json:"count"`
+	Score              int                `json:"score"`
 	ReleaseGroup       ReleaseGroup       `json:"release-group"`
 	ArtistCredit       []ArtistCredit     `json:"artist-credit"`
 	Media              []Media            `json:"media"`
@@ -246,4 +254,120 @@ const (
 type Record[Data any] struct {
 	Date time.Time `json:"date"`
 	Data Data      `json:"data"`
+}
+
+type SearchReleaseGroupRequest struct {
+	Raw              string
+	ArtistName       string
+	ReleaseName      string
+	FirstReleaseDate string
+	Reid             string
+	Rgid             string
+}
+
+func (r SearchReleaseGroupRequest) Query() string {
+	var (
+		orParts  []string
+		andParts []string
+	)
+	if r.ArtistName != "" {
+		orParts = append(orParts, queryPart("artistname", r.ArtistName)+"~")
+	}
+	if r.ReleaseName != "" {
+		orParts = append(orParts, queryPart("release", r.ReleaseName)+"~")
+	}
+	if r.FirstReleaseDate != "" {
+		orParts = append(orParts, queryPart("firstreleasedate", r.FirstReleaseDate))
+	}
+	if r.Raw != "" {
+		andParts = append(andParts, r.Raw)
+	}
+	if len(orParts) > 0 {
+		andParts = append(andParts, "("+strings.Join(orParts, " OR ")+")")
+	}
+	if r.Rgid != "" {
+		andParts = append(andParts, queryPart("rgid", r.Rgid))
+	}
+	return strings.Join(andParts, " AND ")
+}
+
+type SearchReleaseRequest struct {
+	Raw           string
+	ArtistName    string
+	ReleaseName   string
+	ReleaseDate   string
+	Format        string
+	CatalogNumber string
+	Tracks        int
+	Reid          string
+	Rgid          string
+}
+
+func queryPart(field, value string) string {
+	return fmt.Sprintf("%s:\"%s\"", field, strings.ReplaceAll(value, "\"", "\\\""))
+}
+
+func (r SearchReleaseRequest) Query() string {
+	var (
+		orParts  []string
+		andParts []string
+	)
+	if r.ArtistName != "" {
+		orParts = append(orParts, queryPart("artistname", r.ArtistName)+"~")
+	}
+	if r.ReleaseName != "" {
+		orParts = append(orParts, queryPart("release", r.ReleaseName)+"~")
+	}
+	if r.ReleaseDate != "" {
+		orParts = append(orParts, queryPart("date", r.ReleaseDate))
+	}
+	if r.Format != "" {
+		orParts = append(orParts, queryPart("format", r.Format))
+	}
+	if r.CatalogNumber != "" {
+		orParts = append(orParts, queryPart("catno", r.CatalogNumber))
+	}
+	if r.Tracks > 0 {
+		orParts = append(orParts, queryPart("tracks", strconv.Itoa(r.Tracks)))
+	}
+	if len(orParts) > 0 {
+		andParts = append(andParts, "("+strings.Join(orParts, " OR ")+")")
+	}
+	if r.Raw != "" {
+		andParts = append(andParts, r.Raw)
+	}
+	if r.Reid != "" {
+		andParts = append(andParts, queryPart("reid", r.Reid))
+	}
+	if r.Rgid != "" {
+		andParts = append(andParts, queryPart("rgid", r.Rgid))
+	}
+	return strings.Join(andParts, " AND ")
+}
+
+type SearchReleaseResult struct {
+	Created  time.Time `json:"created"`
+	Count    int       `json:"count"`
+	Offset   int       `json:"offset"`
+	Releases []Release `json:"releases"`
+}
+
+type SearchReleaseGroupResult struct {
+	Created       time.Time      `json:"created"`
+	Count         int            `json:"count"`
+	Offset        int            `json:"offset"`
+	ReleaseGroups []ReleaseGroup `json:"release-groups"`
+}
+
+type IDName struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+func (g ReleaseGroup) String() string {
+	var artists []string
+	for _, credit := range g.ArtistCredit {
+		artists = append(artists, credit.Name)
+	}
+	return fmt.Sprintf("[%s] %s - %s (%s)", g.ID, strings.Join(artists, "; "), g.Title, g.FirstReleaseDate)
 }
