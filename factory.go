@@ -17,6 +17,7 @@ func NewClient(config Config) Client {
 			requester: requesterResty{
 				resty: resty.New().
 					SetBaseURL(config.BaseURL).
+					SetTimeout(config.Timeout).
 					SetHeader("User-Agent", config.UserAgent).
 					SetRetryCount(config.RetryCount).
 					SetRetryWaitTime(config.RetryWaitTime).

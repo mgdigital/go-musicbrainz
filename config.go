@@ -25,6 +25,7 @@ type Config struct {
 	RetryMaxWaitTime time.Duration
 	RateLimit        rate.Limit
 	RateBurst        int
+	Timeout          time.Duration
 }
 
 func NewDefaultConfig() Config {
@@ -40,5 +41,6 @@ func NewDefaultConfig() Config {
 		RetryMaxWaitTime: 60 * time.Second,
 		RateLimit:        rate.Every(time.Second),
 		RateBurst:        3,
+		Timeout:          30 * time.Second,
 	}
 }
